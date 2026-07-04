@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trencadís · Aprèn català jugant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --blau: #1B4B82;
+    --blau-fosc: #113259;
+    --groc: #F2C641;
+    --vermell: #E8543F;
+    --verd: #2FA89B;
+    --lila: #8E5FA8;
+    --tinta: #1A1A2E;
+    --crema: #FFF8ED;
+    --white: #FFFFFF;
+    --ok: #2FA89B;
+    --bad: #E8543F;
+    --radius: 18px;
+  }
+
+  *{box-sizing:border-box;}
+
+  html,body{
+    margin:0; padding:0; min-height:100%;
+  }
+
+  body{
+    font-family:'Nunito', sans-serif;
+    color: var(--tinta);
+    background:
+      radial-gradient(circle at 8% 12%, rgba(242,198,65,0.20), transparent 40%),
+      radial-gradient(circle at 92% 8%, rgba(232,84,63,0.16), transparent 38%),
+      radial-gradient(circle at 85% 90%, rgba(47,168,155,0.18), transparent 42%),
+      linear-gradient(160deg, #EAF4FB 0%, #FFF8ED 55%, #FDEFD9 100%);
+    min-height:100vh;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding: 28px 14px 60px;
+    overflow-x:hidden;
+    position:relative;
+  }
+
+  /* scattered tesserae background texture */
+  .tessera{
+    position:fixed;
+    width: 14px; height:14px;
+    opacity:0.16;
+    transform: rotate(20deg);
+    border-radius:3px;
+    pointer-events:none;
+    z-index:0;
+  }
+
+  .app{
+    position:relative;
+    z-index:1;
+    width:100%;
+    max-width: 620px;
+  }
+
+  /* ---------- HEADER ---------- */
+  header{
+    text-align:center;
+    margin-bottom: 18px;
+  }
+
+  .mascota{
+    width: 92px;
+    height: 92px;
+    margin: 0 auto 6px;
+    filter: drop-shadow(0 6px 10px rgba(27,75,130,0.25));
+    animation: balanceig 3.4s ease-in-out infinite;
+  }
+  @keyframes balanceig{
+    0%,100%{ transform: rotate(-3deg); }
+    50%{ transform: rotate(3deg); }
+  }
+  .mascota.ballant{ animation: ballar 0.6s ease-in-out; }
+  @keyframes ballar{
+    0%{ transform: scale(1) rotate(0); }
+    30%{ transform: scale(1.18) rotate(-8deg); }
+    60%{ transform: scale(1.1) rotate(8deg); }
+    100%{ transform: scale(1) rotate(0); }
+  }
+
+  h1{
+    font-family:'Fredoka', sans-serif;
+    font-weight:700;
+    font-size: clamp(28px, 6vw, 40px);
+    margin: 2px 0 2px;
+    color: var(--blau-fosc);
+    letter-spacing: 0.5px;
+  }
+  h1 span{ color: var(--vermell); }
+
+  .subtitol{
+    font-weight:700;
+    font-size: 14px;
+    color: var(--blau);
+    opacity:0.85;
+    margin: 0;
+  }
+
+  /* ---------- STATS BAR ---------- */
+  .stats{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap: 10px;
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    margin: 16px 0 14px;
+    box-shadow: 0 8px 20px rgba(27,75,130,0.10);
+    flex-wrap: wrap;
+  }
+
+  .cors{ display:flex; gap:4px; font-size: 20px; letter-spacing:1px;}
+  .cor{ transition: transform 0.25s ease; }
+  .cor.perdut{ filter: grayscale(1) opacity(0.35); transform: scale(0.85); }
+
+  .racha{
+    display:flex;
+    align-items:center;
+    gap:5px;
+    font-weight:800;
+    font-size:14px;
+    color: var(--vermell);
+    font-family:'Fredoka',sans-serif;
+  }
+  .flama{ font-size:17px; }
+
+  .nivell-box{
+    flex: 1 1 130px;
+    min-width: 120px;
+  }
+  .nivell-titol{
+    font-size:11px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:0.6px;
+    color: var(--blau);
+    margin-bottom:3px;
+    display:flex;
+    justify-content:space-between;
+  }
+  .xp-barra-fons{
+    background: #EDEFF4;
+    height: 9px;
+    border-radius: 6px;
+    overflow:hidden;
+  }
+  .xp-barra{
+    height:100%;
+    width:0%;
+    background: linear-gradient(90deg, var(--groc), var(--vermell));
+    border-radius:6px;
+    transition: width 0.5s cubic-bezier(.4,1.4,.6,1);
+  }
+
+  .so-btn{
+    border:none;
+    background: var(--crema);
+    width:38px; height:38px;
+    border-radius:50%;
+    font-size:16px;
+    cursor:pointer;
+    flex-shrink:0;
+    transition: transform 0.15s ease;
+  }
+  .so-btn:hover{ transform: scale(1.08); }
+
+  /* ---------- PROGRESS + CATEGORY ---------- */
+  .top-info{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin: 0 2px 10px;
+  }
+  .categoria-chip{
+    display:inline-block;
+    background: var(--blau);
+    color:#fff;
+    font-weight:800;
+    font-size:12px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    letter-spacing:0.4px;
+  }
+  .progres-text{
+    font-size:12px;
+    font-weight:700;
+    color: var(--blau-fosc);
+    opacity:0.7;
+  }
+
+  /* ---------- QUESTION CARD ---------- */
+  .card{
+    background: var(--white);
+    border-radius: 22px;
+    padding: 26px 22px 22px;
+    box-shadow: 0 14px 34px rgba(27,75,130,0.14);
+    position:relative;
+    overflow:hidden;
+  }
+
+  .trencadis-barra{
+    position:absolute;
+    top:0; left:0; right:0;
+    height:10px;
+    display:flex;
+  }
+  .trencadis-barra span{
+    flex:1;
+  }
+
+  .pregunta{
+    font-family:'Fredoka', sans-serif;
+    font-weight:600;
+    font-size: clamp(19px, 4.6vw, 24px);
+    color: var(--tinta);
+    margin: 14px 0 20px;
+    line-height:1.35;
+  }
+
+  .opcions{
+    display:grid;
+    gap: 12px;
+  }
+
+  .opcio{
+    text-align:left;
+    background: var(--crema);
+    border: 2px solid transparent;
+    border-left: 7px solid var(--blau);
+    border-radius: 14px;
+    padding: 14px 16px;
+    font-family:'Nunito', sans-serif;
+    font-weight:700;
+    font-size: 16px;
+    color: var(--tinta);
+    cursor:pointer;
+    transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.2s ease;
+  }
+  .opcio:hover:not(:disabled){
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(27,75,130,0.15);
+  }
+  .opcio:disabled{ cursor:default; }
+  .opcio.correcta{
+    background: rgba(47,168,155,0.16);
+    border-left-color: var(--ok);
+    border-color: var(--ok);
+  }
+  .opcio.incorrecta{
+    background: rgba(232,84,63,0.14);
+    border-left-color: var(--bad);
+    border-color: var(--bad);
+    animation: tremolor 0.4s ease;
+  }
+  @keyframes tremolor{
+    0%,100%{ transform: translateX(0); }
+    25%{ transform: translateX(-6px); }
+    75%{ transform: translateX(6px); }
+  }
+
+  .feedback-line{
+    min-height: 26px;
+    margin-top: 14px;
+    font-weight:800;
+    font-size: 14px;
+    text-align:center;
+  }
+  .feedback-line.ok{ color: var(--ok); }
+  .feedback-line.bad{ color: var(--bad); }
+
+  .accio-seguent{
+    display:flex;
+    justify-content:center;
+    margin-top: 6px;
+  }
+  .btn-principal{
+    font-family:'Fredoka', sans-serif;
+    font-weight:600;
+    font-size:16px;
+    background: var(--vermell);
+    color:#fff;
+    border:none;
+    padding: 12px 30px;
+    border-radius: 999px;
+    cursor:pointer;
+    box-shadow: 0 8px 18px rgba(232,84,63,0.35);
+    transition: transform 0.15s ease;
+  }
+  .btn-principal:hover{ transform: translateY(-2px) scale(1.02); }
+  .btn-secundari{
+    font-family:'Fredoka', sans-serif;
+    font-weight:600;
+    font-size:15px;
+    background: transparent;
+    color: var(--blau);
+    border: 2px solid var(--blau);
+    padding: 10px 24px;
+    border-radius: 999px;
+    cursor:pointer;
+    margin-top:10px;
+    transition: transform 0.15s ease;
+  }
+  .btn-secundari:hover{ transform: translateY(-2px); }
+
+  /* ---------- END SCREEN ---------- */
+  .final{
+    text-align:center;
+  }
+  .final .emoji-gran{ font-size: 54px; margin-bottom: 6px; }
+  .final h2{
+    font-family:'Fredoka', sans-serif;
+    color: var(--blau-fosc);
+    font-size: 26px;
+    margin: 4px 0 2px;
+  }
+  .badge{
+    display:inline-block;
+    margin: 12px 0 16px;
+    padding: 8px 20px;
+    border-radius: 999px;
+    font-family:'Fredoka', sans-serif;
+    font-weight:600;
+    background: linear-gradient(90deg, var(--groc), var(--vermell));
+    color:#fff;
+    font-size: 15px;
+  }
+  .resum{
+    display:flex;
+    justify-content:center;
+    gap: 18px;
+    margin: 10px 0 18px;
+    flex-wrap:wrap;
+  }
+  .resum div{
+    background: var(--crema);
+    border-radius:14px;
+    padding: 10px 16px;
+    min-width: 78px;
+  }
+  .resum .num{
+    font-family:'Fredoka',sans-serif;
+    font-size:22px;
+    font-weight:700;
+    color: var(--blau);
+  }
+  .resum .lbl{ font-size:11px; font-weight:700; color: var(--tinta); opacity:0.65; text-transform:uppercase;}
+
+  .crida{
+    background: rgba(47,168,155,0.10);
+    border-radius: 14px;
+    padding: 14px 16px;
+    font-size: 14px;
+    font-weight:700;
+    color: var(--blau-fosc);
+    margin-top: 6px;
+    line-height:1.5;
+  }
+
+  /* confetti tiles */
+  .tesserella{
+    position:fixed;
+    top:-20px;
+    width:10px;height:10px;
+    border-radius:2px;
+    pointer-events:none;
+    z-index: 50;
+    animation: caiguda linear forwards;
+  }
+  @keyframes caiguda{
+    to{
+      transform: translateY(110vh) rotate(540deg);
+      opacity:0;
+    }
+  }
+
+  .toast-nivell{
+    position:fixed;
+    top: 18px;
+    left:50%;
+    transform: translateX(-50%) translateY(-40px);
+    background: var(--blau-fosc);
+    color:#fff;
+    font-family:'Fredoka',sans-serif;
+    font-weight:600;
+    padding: 12px 22px;
+    border-radius: 999px;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.25);
+    opacity:0;
+    transition: all 0.4s cubic-bezier(.4,1.6,.5,1);
+    z-index:100;
+    font-size:14px;
+  }
+  .toast-nivell.mostra{
+    opacity:1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  footer{
+    text-align:center;
+    margin-top: 18px;
+    font-size:11px;
+    color: var(--blau-fosc);
+    opacity:0.55;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation: none !important; transition: none !important; }
+  }
+
+  @media (max-width: 420px){
+    .stats{ padding:10px 12px; }
+    .card{ padding: 20px 16px 18px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <header>
+    <svg class="mascota" id="mascota" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <!-- mosaic salamander, tesserae style -->
+      <g>
+        <polygon points="50,8 62,18 55,28 45,28 38,18" fill="#2FA89B"/>
+        <polygon points="45,28 55,28 60,40 40,40" fill="#1B4B82"/>
+        <polygon points="40,40 60,40 66,54 34,54" fill="#F2C641"/>
+        <polygon points="34,54 66,54 70,68 30,68" fill="#E8543F"/>
+        <polygon points="30,68 70,68 64,80 36,80" fill="#8E5FA8"/>
+        <polygon points="36,80 64,80 58,90 42,90" fill="#2FA89B"/>
+        <circle cx="44" cy="20" r="2.6" fill="#1A1A2E"/>
+        <circle cx="56" cy="20" r="2.6" fill="#1A1A2E"/>
+        <polygon points="18,44 34,50 30,60 14,56" fill="#F2C641"/>
+        <polygon points="82,44 66,50 70,60 86,56" fill="#E8543F"/>
+        <polygon points="8,66 26,64 24,74 6,76" fill="#1B4B82"/>
+        <polygon points="92,66 74,64 76,74 94,76" fill="#2FA89B"/>
+      </g>
+    </svg>
+    <h1>Trenca<span>dís</span></h1>
+    <p class="subtitol">Aprèn català jugant · nivell A2</p>
+  </header>
+
+  <div class="stats">
+    <div class="cors" id="cors"></div>
+    <div class="racha"><span class="flama">🔥</span><span id="rachaNum">0</span></div>
+    <div class="nivell-box">
+      <div class="nivell-titol"><span id="nivellNom">Aprenent</span><span id="xpText">0 XP</span></div>
+      <div class="xp-barra-fons"><div class="xp-barra" id="xpBarra"></div></div>
+    </div>
+    <button class="so-btn" id="soBtn" title="Activa/desactiva el so">🔊</button>
+  </div>
+
+  <div class="top-info">
+    <span class="categoria-chip" id="categoriaChip">Salutacions</span>
+    <span class="progres-text" id="progresText">1 / 30</span>
+  </div>
+
+  <div class="card" id="joc">
+    <div class="trencadis-barra" id="barraColors"></div>
+    <div class="pregunta" id="preguntaText"></div>
+    <div class="opcions" id="opcions"></div>
+    <div class="feedback-line" id="feedback"></div>
+    <div class="accio-seguent" id="seguentBox" style="display:none;">
+      <button class="btn-principal" id="btnSeguent">Següent →</button>
+    </div>
+  </div>
+
+  <div class="card final" id="finalCard" style="display:none;">
+    <div class="emoji-gran" id="finalEmoji">🎉</div>
+    <h2 id="finalTitol">Molt bé!</h2>
+    <div class="badge" id="finalBadge">Explorador del català</div>
+    <div class="resum">
+      <div><div class="num" id="finalEncerts">0</div><div class="lbl">Encerts</div></div>
+      <div><div class="num" id="finalXp">0</div><div class="lbl">XP total</div></div>
+      <div><div class="num" id="finalRacha">0</div><div class="lbl">Millor ratxa</div></div>
+    </div>
+    <p class="crida" id="finalCrida"></p>
+    <button class="btn-principal" id="btnReiniciar">Vull un altre repte 🔁</button><br>
+    <button class="btn-secundari" id="btnPreguntar">Demana'm més jocs com aquest 💬</button>
+  </div>
+
+  <footer>Fet amb 🧩 trencadís — cultura catalana en joc</footer>
+</div>
+
+<div class="toast-nivell" id="toastNivell"></div>
+
+<script>
+(function(){
+
+  // ---------------- BANC DE PREGUNTES (A2) ----------------
+  const preguntes = [
+    // Salutacions
+    {cat:"Salutacions", q:"«Bon dia!» vol dir...", opts:["Buenos días","Buenas noches","Adiós","Gracias"], r:0},
+    {cat:"Salutacions", q:"«Com estàs?» significa...", opts:["¿Cómo estás?","¿Cómo te llamas?","¿Dónde vives?","¿Qué hora es?"], r:0},
+    {cat:"Salutacions", q:"¿Cómo se dice «gracias» en català?", opts:["Perdó","Gràcies","Adéu","Sisplau"], r:1},
+    {cat:"Salutacions", q:"«Fins després» significa...", opts:["Hasta luego","Buenos días","Por favor","De nada"], r:0},
+    {cat:"Salutacions", q:"¿Cómo se dice «por favor» en català?", opts:["Sisplau","Gràcies","Adéu","Perdona"], r:0},
+
+    // Números
+    {cat:"Números", q:"Com s'escriu el número 7 en català?", opts:["Sis","Set","Vuit","Nou"], r:1},
+    {cat:"Números", q:"«Vint» és el número...", opts:["12","20","21","2"], r:1},
+    {cat:"Números", q:"El número 100 en català és...", opts:["Mil","Deu","Cent","Cinquanta"], r:2},
+    {cat:"Números", q:"«Tretze» correspon al número...", opts:["30","3","13","31"], r:2},
+
+    // Família
+    {cat:"Família", q:"«Germana» significa...", opts:["Hermano","Hermana","Madre","Abuela"], r:1},
+    {cat:"Família", q:"El pare del meu pare és el meu...", opts:["Oncle","Avi","Cosí","Nebot"], r:1},
+    {cat:"Família", q:"«Nebot» es refereix a...", opts:["Primo","Cuñado","Sobrino","Suegro"], r:2},
+    {cat:"Família", q:"«Cunyada» significa...", opts:["Cuñada","Nuera","Suegra","Tía"], r:0},
+
+    // Menjar i begudes
+    {cat:"Menjar", q:"«Pa amb tomàquet» és un plat fet de...", opts:["Arroz con pollo","Pan con tomate","Sopa de pescado","Ensalada verde"], r:1},
+    {cat:"Menjar", q:"«Poma» significa...", opts:["Pera","Manzana","Naranja","Plátano"], r:1},
+    {cat:"Menjar", q:"Per demanar aigua en un restaurant dius...", opts:["Voldria pa, sisplau","Voldria sal, sisplau","Voldria aigua, sisplau","Voldria vi, sisplau"], r:2},
+    {cat:"Menjar", q:"«Formatge» significa...", opts:["Jamón","Huevo","Leche","Queso"], r:3},
+
+    // Temps i dies
+    {cat:"Temps", q:"«Dilluns» és...", opts:["Martes","Lunes","Domingo","Viernes"], r:1},
+    {cat:"Temps", q:"«Ahir» significa...", opts:["Hoy","Ayer","Mañana","Anteayer"], r:1},
+    {cat:"Temps", q:"«Quin dia és avui?» significa...", opts:["¿Qué hora es?","¿Cuándo llegas?","¿Qué día es hoy?","¿Dónde vas?"], r:2},
+    {cat:"Temps", q:"«Diumenge» és el dia...", opts:["Sábado","Domingo","Lunes","Jueves"], r:1},
+
+    // Verbs essencials
+    {cat:"Verbs", q:"Completa: «Jo ___ estudiant.»", opts:["sóc","estic","tinc","vaig"], r:0},
+    {cat:"Verbs", q:"«Tinc gana» significa...", opts:["Tengo sed","Tengo hambre","Tengo sueño","Tengo frío"], r:1},
+    {cat:"Verbs", q:"«On vas?» utilitza el verb...", opts:["Ser","Tenir","Anar","Fer"], r:2},
+    {cat:"Verbs", q:"Completa: «Ella ___ contenta.»", opts:["és","està","té","fa"], r:1},
+    {cat:"Verbs", q:"«Faig els deures» significa...", opts:["Hice los deberes","Hago los deberes","Haré los deberes","Hacía los deberes"], r:1},
+
+    // Frases quotidianes
+    {cat:"Frases", q:"«M'agrada molt el cinema» significa...", opts:["No me gusta el cine","Me gusta mucho el cine","Odio el cine","El cine me da igual"], r:1},
+    {cat:"Frases", q:"«Quant costa això?» significa...", opts:["¿Qué es esto?","¿Dónde está esto?","¿Cuánto cuesta esto?","¿Cuándo es esto?"], r:2},
+    {cat:"Frases", q:"«No ho entenc» significa...", opts:["No lo sé","No lo tengo","No lo entiendo","No lo quiero"], r:2},
+    {cat:"Frases", q:"«Pots repetir, sisplau?» significa...", opts:["¿Puedes venir, por favor?","¿Puedes repetir, por favor?","¿Puedes esperar, por favor?","¿Puedes ayudar, por favor?"], r:1},
+  ];
+
+  const paleta = ["#1B4B82","#F2C641","#E8543F","#2FA89B","#8E5FA8"];
+
+  function barreja(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i],a[j]]=[a[j],a[i]];
+    }
+    return a;
+  }
+
+  // ---------------- ESTAT ----------------
+  let cua = barreja(preguntes);
+  let index = 0;
+  let vides = 3;
+  let xp = 0;
+  let racha = 0;
+  let millorRacha = 0;
+  let encerts = 0;
+  let nivell = 1;
+  let soActiu = true;
+  let bloquejat = false;
+
+  const nivells = [
+    {llindar:0, nom:"Aprenent"},
+    {llindar:60, nom:"Viatger"},
+    {llindar:140, nom:"Explorador"},
+    {llindar:240, nom:"Crack del català"},
+    {llindar:360, nom:"Mestre del trencadís"}
+  ];
+
+  // ---------------- REFERENCIES DOM ----------------
+  const $ = (id)=>document.getElementById(id);
+  const corsBox = $("cors");
+  const rachaNum = $("rachaNum");
+  const nivellNom = $("nivellNom");
+  const xpText = $("xpText");
+  const xpBarra = $("xpBarra");
+  const categoriaChip = $("categoriaChip");
+  const progresText = $("progresText");
+  const preguntaText = $("preguntaText");
+  const opcionsBox = $("opcions");
+  const feedback = $("feedback");
+  const seguentBox = $("seguentBox");
+  const btnSeguent = $("btnSeguent");
+  const jocCard = $("joc");
+  const finalCard = $("finalCard");
+  const toastNivell = $("toastNivell");
+  const soBtn = $("soBtn");
+  const mascota = $("mascota");
+  const barraColors = $("barraColors");
+
+  // barra de trencadís de colors a dalt de la targeta
+  barraColors.innerHTML = paleta.map(c=>`<span style="background:${c}"></span>`).join("");
+
+  // ---------------- SO (Web Audio, sense fitxers) ----------------
+  let audioCtx;
+  function beep(freq, dur, tipo){
+    if(!soActiu) return;
+    try{
+      audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = tipo || "sine";
+      osc.frequency.value = freq;
+      gain.gain.value = 0.08;
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start();
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+      osc.stop(audioCtx.currentTime + dur);
+    }catch(e){}
+  }
+
+  soBtn.addEventListener("click", ()=>{
+    soActiu = !soActiu;
+    soBtn.textContent = soActiu ? "🔊" : "🔇";
+  });
+
+  // ---------------- RENDER STATS ----------------
+  function renderCors(){
+    corsBox.innerHTML = "";
+    for(let i=0;i<3;i++){
+      const s = document.createElement("span");
+      s.className = "cor" + (i < vides ? "" : " perdut");
+      s.textContent = "❤️";
+      corsBox.appendChild(s);
+    }
+  }
+
+  function nivellActual(){
+    let actual = nivells[0];
+    for(const n of nivells){ if(xp >= n.llindar) actual = n; }
+    return actual;
+  }
+
+  function renderNivell(anterior){
+    const actual = nivellActual();
+    nivellNom.textContent = actual.nom;
+    xpText.textContent = xp + " XP";
+    const idx = nivells.indexOf(actual);
+    const seguent = nivells[idx+1];
+    let pct;
+    if(!seguent){ pct = 100; }
+    else{ pct = ((xp - actual.llindar) / (seguent.llindar - actual.llindar)) * 100; }
+    xpBarra.style.width = Math.min(100,Math.max(4,pct)) + "%";
+
+    if(anterior && anterior.nom !== actual.nom){
+      mostraToastNivell("🌟 Nivell nou: " + actual.nom);
+      beep(880,0.25,"triangle");
+    }
+  }
+
+  function mostraToastNivell(text){
+    toastNivell.textContent = text;
+    toastNivell.classList.add("mostra");
+    setTimeout(()=>toastNivell.classList.remove("mostra"), 2200);
+  }
+
+  function renderProgres(){
+    progresText.textContent = (index+1) + " / " + cua.length;
+  }
+
+  // ---------------- CONFETTI (tessel·les) ----------------
+  function confetti(x,y,quant){
+    for(let i=0;i<quant;i++){
+      const t = document.createElement("div");
+      t.className = "tesserella";
+      t.style.left = (x + (Math.random()*120-60)) + "px";
+      t.style.background = paleta[Math.floor(Math.random()*paleta.length)];
+      t.style.animationDuration = (0.9 + Math.random()*0.9) + "s";
+      t.style.top = y + "px";
+      document.body.appendChild(t);
+      setTimeout(()=>t.remove(), 2000);
+    }
+  }
+
+  // ---------------- JOC ----------------
+  function carregaPregunta(){
+    bloquejat = false;
+    feedback.textContent = "";
+    feedback.className = "feedback-line";
+    seguentBox.style.display = "none";
+
+    const p = cua[index];
+    categoriaChip.textContent = p.cat;
+    preguntaText.textContent = p.q;
+    renderProgres();
+
+    opcionsBox.innerHTML = "";
+    const ordreOpcions = p.opts.map((text,i)=>({text, esCorrecta:i===p.r}));
+
+    ordreOpcions.forEach((op)=>{
+      const btn = document.createElement("button");
+      btn.className = "opcio";
+      btn.textContent = op.text;
+      btn.addEventListener("click", ()=>respon(btn, op.esCorrecta));
+      opcionsBox.appendChild(btn);
+    });
+  }
+
+  function respon(btnClicat, esCorrecta){
+    if(bloquejat) return;
+    bloquejat = true;
+
+    const totsBtns = opcionsBox.querySelectorAll(".opcio");
+    totsBtns.forEach(b=>b.disabled = true);
+
+    const nivellAbans = nivellActual();
+
+    if(esCorrecta){
+      btnClicat.classList.add("correcta");
+      racha++;
+      millorRacha = Math.max(millorRacha, racha);
+      encerts++;
+      const bonus = Math.min(racha*2, 20);
+      xp += 10 + bonus;
+      feedback.textContent = "✅ Molt bé! +" + (10+bonus) + " XP" + (racha>1 ? " · ratxa x"+racha : "");
+      feedback.classList.add("ok");
+      beep(660,0.15,"sine");
+      mascota.classList.remove("ballant");
+      void mascota.offsetWidth;
+      mascota.classList.add("ballant");
+      const rect = btnClicat.getBoundingClientRect();
+      confetti(rect.left+rect.width/2, rect.top, 14);
+    } else {
+      btnClicat.classList.add("incorrecta");
+      totsBtns.forEach((b,i)=>{
+        if(cua[index].opts[i] === cua[index].opts[cua[index].r]) b.classList.add("correcta");
+      });
+      racha = 0;
+      vides--;
+      feedback.textContent = "❌ Gairebé! La resposta correcta era: «" + cua[index].opts[cua[index].r] + "»";
+      feedback.classList.add("bad");
+      beep(180,0.3,"sawtooth");
+    }
+
+    renderCors();
+    rachaNum.textContent = racha;
+    renderNivell(nivellAbans);
+
+    if(vides <= 0){
+      setTimeout(()=>acabaJoc(false), 900);
+      return;
+    }
+    seguentBox.style.display = "flex";
+  }
+
+  btnSeguent.addEventListener("click", ()=>{
+    index++;
+    if(index >= cua.length){
+      acabaJoc(true);
+    } else {
+      carregaPregunta();
+    }
+  });
+
+  function acabaJoc(completat){
+    jocCard.style.display = "none";
+    finalCard.style.display = "block";
+
+    $("finalEncerts").textContent = encerts;
+    $("finalXp").textContent = xp;
+    $("finalRacha").textContent = millorRacha;
+
+    const actual = nivellActual();
+    $("finalBadge").textContent = actual.nom;
+
+    if(completat){
+      $("finalEmoji").textContent = "🏆";
+      $("finalTitol").textContent = "Has completat el repte!";
+      $("finalCrida").textContent = "T'ha agradat aprendre català jugant? Puc crear-te el següent repte: verbs en passat, escoltar converses, o un joc per practicar la pronúncia. Digues-me quin vols i el fem ara mateix!";
+      confetti(window.innerWidth/2, 0, 40);
+      beep(523,0.15,"triangle");
+      setTimeout(()=>beep(659,0.15,"triangle"),150);
+      setTimeout(()=>beep(784,0.25,"triangle"),300);
+    } else {
+      $("finalEmoji").textContent = "💪";
+      $("finalTitol").textContent = "T'has quedat sense vides!";
+      $("finalCrida").textContent = "No passa res, aprendre una llengua és qüestió de repetir-ho! Torna-ho a intentar o demana'm un joc nou centrat en el que et costa més.";
+    }
+  }
+
+  $("btnReiniciar").addEventListener("click", ()=>{
+    cua = barreja(preguntes);
+    index = 0; vides = 3; xp = 0; racha = 0; millorRacha = 0; encerts = 0;
+    finalCard.style.display = "none";
+    jocCard.style.display = "block";
+    renderCors(); rachaNum.textContent = 0; renderNivell(null);
+    carregaPregunta();
+  });
+
+  $("btnPreguntar").addEventListener("click", ()=>{
+    if(window.sendPrompt){
+      window.sendPrompt("M'ha encantat el joc de català! Crea'm un altre joc similar per seguir practicant (per exemple, de verbs en passat o de pronunciació).");
+    } else {
+      alert("Digues-li a Claude: \"Crea'm un altre joc de català com aquest!\"");
+    }
+  });
+
+  // ---------------- TEXTURA DE FONS ----------------
+  (function crearTextura(){
+    for(let i=0;i<18;i++){
+      const t = document.createElement("div");
+      t.className = "tessera";
+      t.style.left = Math.random()*100 + "vw";
+      t.style.top = Math.random()*100 + "vh";
+      t.style.background = paleta[Math.floor(Math.random()*paleta.length)];
+      t.style.transform = "rotate(" + Math.floor(Math.random()*45) + "deg)";
+      document.body.appendChild(t);
+    }
+  })();
+
+  // ---------------- INICI ----------------
+  renderCors();
+  renderNivell(null);
+  carregaPregunta();
+
+})();
+</script>
+</body>
+</html>
